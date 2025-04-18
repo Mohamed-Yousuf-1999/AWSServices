@@ -18,22 +18,29 @@ public class S3Controller : ControllerBase{
         return Ok(files);
     }
 
-    // [HttpPost("UploadFile")]
-    // public async Task<IActionResult> UploadFile([FromForm] IFormFile file){
+    [HttpPost("UploadFile")]
+    public async Task<IActionResult> UploadFile(IFormFile file){
 
-    //     if(file == null || file.Length == 0){
-    //         return BadRequest("File is required");
-    //     }
+        if(file == null || file.Length == 0){
+            return BadRequest("File is required");
+        }
 
-    //     using var stream = file.OpenReadStream();
-    //     await _s3Service.UploadFileAsync(file.FileName, stream);
-    //     return Ok(new {message = "File uploaded successfully"});
-    // }
+        var extension = Path.GetExtension(file.FileName).TrimStart('.').ToUpperInvariant();
+        using var stream = file.OpenReadStream();
+        await _s3Service.UploadFileAsync(file.FileName, extension, stream);
+        return Ok(new {message = "File uploaded successfully"});
+    }
 
     [HttpGet("DownloadFiles")]
     public async Task<IActionResult> DownloadFiles(string key){
         var stream = await _s3Service.DownloadFile(key);
         return File(stream, "application/octet-stream", key);
+    }
+
+    [HttpGet("GetFilePresignedUrl")]
+    public async Task<IActionResult> GetFilePresignedUrl(string key){
+        var result = await _s3Service.GetFilePresignedUrl(key);
+        return Ok(result);
     }
 
     [HttpDelete("Delete")]

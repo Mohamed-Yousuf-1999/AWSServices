@@ -27,11 +27,22 @@ public class S3Service
         return result;
     }
 
-    public async Task UploadFileAsync(string key, Stream stream)
-    {
-        var request = new PutObjectRequest{
+    public async Task<string> GetFilePresignedUrl(string key){
+        var request = new GetPreSignedUrlRequest{
             BucketName = _bucketName,
             Key = key,
+            Expires = DateTime.Now.AddMinutes(1)
+        };
+        var result = _s3Client.GetPreSignedURL(request);
+        return result;
+    }
+
+    public async Task UploadFileAsync(string key, string extension, Stream stream)
+    {
+        var fileKey = $"{extension}/{key}";
+        var request = new PutObjectRequest{
+            BucketName = _bucketName,
+            Key = fileKey,
             InputStream = stream
         };
         await _s3Client.PutObjectAsync(request);
@@ -39,12 +50,16 @@ public class S3Service
 
     public async Task<Stream> DownloadFile(string key)
     {
-        var response = await _s3Client.GetObjectAsync(_bucketName, key);
+        var extension = Path.GetExtension(key).TrimStart('.').ToUpperInvariant();
+
+        var response = await _s3Client.GetObjectAsync(_bucketName, $"{extension}/{key}");
         return response.ResponseStream;
     }
 
     public async Task DeleteFileAsync(string key)
     {
-        await _s3Client.DeleteObjectAsync(_bucketName, key);
+        var extension = Path.GetExtension(key).TrimStart('.').ToUpperInvariant();
+
+        await _s3Client.DeleteObjectAsync(_bucketName, $"{extension}/{key}");
     }
 }
