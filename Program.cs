@@ -1,6 +1,7 @@
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using AWSService.StarupDI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +18,8 @@ var regionEndPoint = RegionEndpoint.GetBySystemName(region);
 //Register AWS S3 with manual config
 builder.Services.AddSingleton<IAmazonS3>(sp => new AmazonS3Client(credentials, regionEndPoint));
 
-//Custom S3 Service
-builder.Services.AddScoped<S3Service>();
+builder.Services.AddServices();
+builder.Services.AddRepositories();
 
 // // Add services to the container.
 // builder.Services.AddSwaggerGen(c =>

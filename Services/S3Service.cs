@@ -1,13 +1,13 @@
 using Amazon.Runtime;
-using Amazon.Runtime.Internal.Auth;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Microsoft.AspNetCore.Mvc;
+using AWSService.Interfaces.IServices;
 
-public class S3Service
+namespace AWSService.Services;
+public class S3Service : IS3Service
 {
     private readonly IAmazonS3 _s3Client;
-    private readonly string _bucketName;
+    private readonly string _bucketName = string.Empty;
 
     public S3Service(IConfiguration config)
     {
@@ -17,7 +17,7 @@ public class S3Service
             awsSection["SecretKey"]
         );
         _s3Client = new AmazonS3Client(credentials, Amazon.RegionEndpoint.GetBySystemName(awsSection["Region"]));
-        _bucketName = awsSection["BucketName"];
+        _bucketName = awsSection["BucketName"] ?? string.Empty;
     }
     public async Task<List<string>> ListFiles()
     {
@@ -33,7 +33,7 @@ public class S3Service
             Key = key,
             Expires = DateTime.Now.AddMinutes(1)
         };
-        var result = _s3Client.GetPreSignedURL(request);
+        var result = await _s3Client.GetPreSignedURLAsync(request);
         return result;
     }
 
